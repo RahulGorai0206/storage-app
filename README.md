@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ☁️ GitHub Drive: Infinite Cloud Storage Interface
 
-## Getting Started
+Welcome to **GitHub Drive**, an incredibly sophisticated and localized desktop application that bridges the beautiful interface of Google Drive with the limitless backend storage potential of GitHub's version control system.
 
-First, run the development server:
+Built using **Electron, Next.js 16, TypeScript, Better-SQLite3, and Shadcn UI**, this application transforms any standard GitHub repository into a high-capacity, distributed, streaming-capable cloud drive.
+
+## 🚀 Key Features
+
+### 1. The GitHub "Git Database" Backbone
+Unlike generic GitHub wrappers that use basic file-upload APIs, GitHub Drive communicates directly via the low-level **Git Database API** (Trees, Blobs, and Commits). 
+* **Atomic Uploads:** Complex folder structures and file overrides are handled sequentially as "Git Commits", completely nullifying edge-case crashes related to simultaneous caching or API rate limits.
+* **Intelligent File Chunking:** GitHub strictly limits file sizes to 25MB via the API. To bypass this, massive files (e.g., 500MB videos or 1GB ZIP archives) are automatically swept up, mathematically split into 25MB chunks (`video.mp4.001`, `video.mp4.002`, etc.), encrypted, and uploaded asynchronously. 
+* **Absolute Collision Prevention:** Files are assigned mathematically unique UUIDs inside the SQLite core when they are uploaded. This physically separates files inside GitHub's "flat" cloud storage layer. You can have 50 files named `report.pdf` in 50 different folders without them ever overwriting each other.
+
+### 2. High-Performance Lazy Stream Architecture
+Traditional applications load massive files into your computer's RAM (memory) before attempting to encrypt or upload them. That limits your upload capacity to the amount of RAM in your computer. 
+* **Zero-Footprint Uploads:** GitHub Drive uses an advanced "Lazy Stream Pipeline". If you drag-and-drop a 5GB file into the app, it pulls directly from your hard drive exactly 25MB at a time, uploads it, and deletes the 25MB slice from memory. No freezing, no crashing, no matter how big the file!
+
+### 3. Integrated Video & Media Streaming 
+When you click on a massive movie file inside the UI, it does *not* download the whole file to your computer.
+Instead, a local HTTP stream server boots up securely inside Electron inside your computer. When you "scrub" (skip ahead) on the media player, it mathematically calculates exactly which 25MB chunks on GitHub contain that timestamp and dynamically pulls those exact blocks directly via GitHub's Raw CDN! You can instantly stream 4K movies hosted entirely on a GitHub repository.
+
+### 4. Sleek, "Premium" Google Drive Aesthetics
+Engineered with Shadcn UI (v4 / Base UI) and Tailwind CSS, the application features an enterprise-grade dark mode, glassmorphic dropdowns, contextual right-click menus, dynamic file tracking, and real-time nested folder navigation.
+
+---
+
+## 🛠 Required Setup & Configuration
+
+### Prerequisites
+* Node.js (v18 or higher)
+* A GitHub Account
+
+### 1. Create a GitHub OAuth App
+Because you are accessing files via GitHub's API, the application needs permission to interact with your repository.
+1. Go to your GitHub Settings -> Developer settings -> **OAuth Apps** -> **New OAuth App**.
+2. Set the Application Name (e.g., "Personal Drive").
+3. Set the Homepage URL to `http://localhost`.
+4. Set the Authorization Callback URL to `http://localhost`.
+5. Keep your brand new **Client ID** handy. Enable **Device Flow** if prompted so that the app can securely log you in without requiring browser callbacks!
+
+### 2. Create a Storage Repository
+Create an empty, private repository on your GitHub account where your files will actually live.
+For example: `https://github.com/YourUsername/MyCloudDrive`
+
+### 3. Launch the Application
+Clone this project, then run the standard installation and boot commands:
 
 ```bash
+# 1. Install dependencies (This also executes native Node module compilation for Electron SQLite3!)
+npm install
+
+# 2. Boot the Next.js React frontend AND the Electron backend concurrently 
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Connect GitHub
+Once the beautiful UI loads up:
+1. Click **Settings** (the gear icon) in the bottom-left corner of the Sidebar.
+2. Enter your GitHub **Client ID**.
+3. Enter your **Repository Owner** (your username) and **Repository Name** (the repo you just made).
+4. Enter the internal branch you want files stored on (usually `main`). 
+5. Click **Sign In**. The app will provide a secure 8-digit device code. Click the pop-up link to securely authorize the app on the GitHub Website.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You are now fully connected to the Infinite Drive!
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## 🏗 System Architecture Diagram
 
-To learn more about Next.js, take a look at the following resources:
+```mermaid
+graph TD
+    UI[Next.js App UI] <-->|IPC Bridge| Electron[Electron Main Process]
+    Electron -->|Reads/Writes| LocalSQLite[(SQLite Metadata DB)]
+    Electron -->|Streams Chunks| StreamServer[Local HTTP Stream Router]
+    StreamServer -->|Feeds Data| MediaElement[HTML5 Media Player]
+    Electron <-->|Git Database API| GitHub[(GitHub Repository)]
+    
+    subgraph "Upload Pipeline (Lazy Stream)"
+    Disk[Local Hard Drive] -->|25MB Segments| Electron
+    Electron -->|Blobs -> Trees -> Commits| GitHub
+    end
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🐛 Troubleshooting
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* **I am getting a `SqliteError` in my terminal:**
+   * This means your Node Native Modules haven't completely bound to Electron's version. Run `npm run postinstall` to manually trigger `electron-builder`'s dependency compiler!
+* **I'm getting a `401 Bad Credentials` Error:**
+   * Your GitHub OAuth token has expired (or was manually revoked by you). Simply open the Settings dialog in the app and click **Sign In** again to generate a new valid 8-hour token!
+* **I'm getting a `404 Not Found` when trying to view files inside the UI:**
+   * Double-check your GitHub repository name and owner in the Settings menu ensure you didn't accidentally include typos or extra spaces!
