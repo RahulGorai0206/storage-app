@@ -43,6 +43,12 @@ interface DriveContextValue {
   // Media player
   mediaNode: VirtualNode | null;
   mediaStreamUrl: string | null;
+
+  // Text viewer
+  textNode: VirtualNode | null;
+  textStreamUrl: string | null;
+  openTextViewer: (node: VirtualNode) => void;
+  closeTextViewer: () => void;
 }
 
 const DriveContext = createContext<DriveContextValue | null>(null);
@@ -69,6 +75,8 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
   const [uploadQueue, setUploadQueue] = useState<UploadTask[]>([]);
   const [mediaNode, setMediaNode] = useState<VirtualNode | null>(null);
   const [mediaStreamUrl, setMediaStreamUrl] = useState<string | null>(null);
+  const [textNode, setTextNode] = useState<VirtualNode | null>(null);
+  const [textStreamUrl, setTextStreamUrl] = useState<string | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
 
   // Load initial state
@@ -83,7 +91,12 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
         ]);
         setAuthStatus(auth);
         setSettings(s);
-        await loadChildren(null);
+        if (auth.authenticated) {
+          await loadChildren(null);
+        } else {
+          setChildNodes([]);
+          setBreadcrumb([]);
+        }
       } catch (err) {
         console.error('Failed to load initial state:', err);
       }
@@ -156,7 +169,13 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
     if (!isElectron()) return;
     const auth = await window.electronAPI.getAuthStatus();
     setAuthStatus(auth);
-  }, []);
+    if (!auth.authenticated) {
+      setChildNodes([]);
+      setBreadcrumb([]);
+    } else {
+      await loadChildren(currentDirId);
+    }
+  }, [currentDirId, loadChildren]);
 
   const createFolder = useCallback(async (name: string) => {
     if (!isElectron()) return;
@@ -203,6 +222,18 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
     setMediaStreamUrl(null);
   }, []);
 
+  const openTextViewer = useCallback(async (node: VirtualNode) => {
+    if (!isElectron()) return;
+    const url = await window.electronAPI.getStreamUrl(node.node_id);
+    setTextNode(node);
+    setTextStreamUrl(url);
+  }, []);
+
+  const closeTextViewer = useCallback(() => {
+    setTextNode(null);
+    setTextStreamUrl(null);
+  }, []);
+
   const openFileDialog = useCallback(async () => {
     if (!isElectron()) return;
     const filePaths = await window.electronAPI.openFileDialog();
@@ -245,11 +276,15 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
     downloadFile,
     openMediaPlayer,
     closeMediaPlayer,
+    openTextViewer,
+    closeTextViewer,
     openFileDialog,
     cancelUpload,
     setViewMode,
     mediaNode,
     mediaStreamUrl,
+    textNode,
+    textStreamUrl,
   };
 
   return <DriveContext.Provider value={value}>{childrenProp}</DriveContext.Provider>;

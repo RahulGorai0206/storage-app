@@ -161,7 +161,7 @@ function registerIpcHandlers(): void {
           sendProgress();
 
           let completed = 0;
-          const lazyChunks = chunkInfos.map(chunkInfo => ({
+          const lazyChunks = chunkInfos.map((chunkInfo, idx) => ({
             fileName: `${nodeId}_${chunkInfo.fileName}`,
             size: chunkInfo.size,
             read: async () => {
@@ -172,6 +172,8 @@ function registerIpcHandlers(): void {
               };
             }
           }));
+
+          console.log(`\n[Process] Starting sequential Multi-Chunk Upload for ${fileName} (${chunkInfos.length} chunks)...`);
 
           // Atomic upload to GitHub with real-time stream execution
           const results = await atomicUpload(
@@ -185,13 +187,18 @@ function registerIpcHandlers(): void {
               uploadTask.progress = Math.round((completed / uploadTask.chunksTotal) * 100);
               sendProgress();
             },
-            () => canceledUploads.has(uploadTask.id)
+            () => {
+              const cancelled = canceledUploads.has(uploadTask.id);
+              if (cancelled) console.log(`[Process] 🛑 Aborting pipeline since upload was actively cancelled by user!`);
+              return cancelled;
+            }
           );
 
           uploadTask.status = 'committing';
           sendProgress();
 
           // Store in local database
+          console.log(`[Process] 💾 Writing ${chunkInfos.length} chunks to SQLite Database...`);
           upsertNodeWithChunks(
             nodeId,
             parentId,
@@ -215,6 +222,8 @@ function registerIpcHandlers(): void {
           const base64 = buffer.toString('base64');
           const sha256 = computeSHA256FromBuffer(buffer);
 
+          console.log(`\n[Process] Starting single-chunk Upload for ${fileName}...`);
+
           const results = await atomicUpload(
             owner, repo, branch,
             'storage/',
@@ -225,6 +234,7 @@ function registerIpcHandlers(): void {
           );
 
           // Store in database as single chunk
+          console.log(`[Process] 💾 Writing chunk to SQLite Database...`);
           upsertNodeWithChunks(
             nodeId,
             parentId,
@@ -241,6 +251,7 @@ function registerIpcHandlers(): void {
           );
         }
 
+        console.log(`[Process] 🌟 Upload Complete for ${fileName}!`);
         uploadTask.status = 'done';
         uploadTask.progress = 100;
         uploadTask.chunksCompleted = uploadTask.chunksTotal;
@@ -248,9 +259,11 @@ function registerIpcHandlers(): void {
         canceledUploads.delete(uploadTask.id);
       } catch (err: unknown) {
         if (err instanceof Error && err.message === 'STATUS_CANCELLED') {
+          console.log(`[Process] ❌ Upload marked as aborted.`);
           uploadTask.status = 'error';
           uploadTask.error = 'Cancelled by user';
         } else {
+          console.error(`[Process] 💥 Critical Upload Error:`, err);
           uploadTask.status = 'error';
           uploadTask.error = err instanceof Error ? err.message : 'Unknown error';
         }

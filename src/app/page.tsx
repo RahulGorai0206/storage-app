@@ -12,6 +12,7 @@ import { RenameDialog } from '@/components/drive/RenameDialog';
 import { SettingsDialog } from '@/components/drive/SettingsDialog';
 import { DeviceFlowDialog } from '@/components/auth/DeviceFlowDialog';
 import { MediaPlayer } from '@/components/drive/MediaPlayer';
+import { TextViewer } from '@/components/drive/TextViewer';
 import { DropZone } from '@/components/drive/DropZone';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -47,6 +48,7 @@ function DriveApp() {
       {/* Overlays & Dialogs */}
       <UploadOverlay />
       <MediaPlayer />
+      <TextViewer />
       <NewFolderDialog open={newFolderOpen} onOpenChange={setNewFolderOpen} />
       <RenameDialog open={renameNode !== null} onOpenChange={(open) => !open && setRenameNode(null)} node={renameNode} />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />

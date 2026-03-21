@@ -10,9 +10,25 @@
     "build:next": "next build",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "npm run build:next && npm run build:electron",
+    "build:exe": "npm run build && electron-builder --dir",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "electron-builder install-app-deps"
+  },
+  "build": {
+    "appId": "com.github.drive",
+    "productName": "GitHub Drive",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "electron/dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",

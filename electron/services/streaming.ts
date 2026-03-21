@@ -54,6 +54,17 @@ export function stopStreamServer(): void {
  * URL format: /stream/{nodeId}
  */
 async function handleStreamRequest(req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+  // Enable absolute permissive CORS so Next.js UI can fetch raw text
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Range');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
   const url = new URL(req.url || '/', `http://127.0.0.1:${serverPort}`);
   const pathParts = url.pathname.split('/').filter(Boolean);
 

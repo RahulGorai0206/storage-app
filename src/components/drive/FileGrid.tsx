@@ -87,13 +87,26 @@ function isMediaFile(node: VirtualNode): boolean {
   return mime.startsWith('video/') || mime.startsWith('audio/');
 }
 
+function isTextFile(node: VirtualNode): boolean {
+  const mime = node.mime_type || '';
+  const name = node.logical_name.toLowerCase();
+  
+  if (mime.startsWith('text/') || mime.includes('json') || mime.includes('xml') || mime.includes('javascript') || mime.includes('typescript')) {
+    return true;
+  }
+  
+  // Also check popular extensions if OS mapping failed
+  const exts = ['.txt', '.md', '.json', '.js', '.ts', '.jsx', '.tsx', '.css', '.html', '.py', '.rb', '.java', '.go', '.rs', '.c', '.cpp', '.h', '.sh', '.yaml', '.yml', '.env'];
+  return exts.some(ext => name.endsWith(ext));
+}
+
 interface FileItemMenuProps {
   node: VirtualNode;
   onRename: (node: VirtualNode) => void;
 }
 
 function FileItemActions({ node, onRename }: FileItemMenuProps) {
-  const { deleteNode, downloadFile, openMediaPlayer, navigateTo } = useDrive();
+  const { deleteNode, downloadFile, openMediaPlayer, openTextViewer, navigateTo } = useDrive();
 
   return (
     <>
@@ -105,6 +118,11 @@ function FileItemActions({ node, onRename }: FileItemMenuProps) {
       {isMediaFile(node) && (
         <ContextMenuItem onClick={() => openMediaPlayer(node)} className="gap-3 cursor-pointer">
           <Play className="h-4 w-4" /> Play
+        </ContextMenuItem>
+      )}
+      {isTextFile(node) && (
+        <ContextMenuItem onClick={() => openTextViewer(node)} className="gap-3 cursor-pointer">
+          <FileText className="h-4 w-4" /> View Code
         </ContextMenuItem>
       )}
       {node.entity_type === 'FILE' && (
@@ -124,7 +142,7 @@ function FileItemActions({ node, onRename }: FileItemMenuProps) {
 }
 
 function DropdownActions({ node, onRename }: FileItemMenuProps) {
-  const { deleteNode, downloadFile, openMediaPlayer, navigateTo } = useDrive();
+  const { deleteNode, downloadFile, openMediaPlayer, openTextViewer, navigateTo } = useDrive();
 
   return (
     <>
@@ -136,6 +154,11 @@ function DropdownActions({ node, onRename }: FileItemMenuProps) {
       {isMediaFile(node) && (
         <DropdownMenuItem onClick={() => openMediaPlayer(node)} className="gap-3 cursor-pointer">
           <Play className="h-4 w-4" /> Play
+        </DropdownMenuItem>
+      )}
+      {isTextFile(node) && (
+        <DropdownMenuItem onClick={() => openTextViewer(node)} className="gap-3 cursor-pointer">
+          <FileText className="h-4 w-4" /> View Code
         </DropdownMenuItem>
       )}
       {node.entity_type === 'FILE' && (
@@ -159,15 +182,31 @@ interface FileGridProps {
 }
 
 export function FileGrid({ onRename }: FileGridProps) {
-  const { children, navigateTo, viewMode, isLoading, openMediaPlayer } = useDrive();
+  const { children, navigateTo, viewMode, isLoading, openMediaPlayer, openTextViewer, authStatus } = useDrive();
 
   const handleDoubleClick = useCallback((node: VirtualNode) => {
     if (node.entity_type === 'DIRECTORY') {
       navigateTo(node.node_id);
     } else if (isMediaFile(node)) {
       openMediaPlayer(node);
+    } else if (isTextFile(node)) {
+      openTextViewer(node);
     }
-  }, [navigateTo, openMediaPlayer]);
+  }, [navigateTo, openMediaPlayer, openTextViewer]);
+
+  if (!authStatus.authenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground py-24">
+        <div className="h-20 w-20 rounded-full bg-accent flex items-center justify-center">
+          <Folder className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <div className="text-center">
+          <p className="text-lg font-medium text-foreground">Authentication Required</p>
+          <p className="text-sm mt-1 max-w-sm">You must be securely signed in via the Settings menu to access or upload files to this infinite drive.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -150,32 +150,35 @@ export async function atomicUpload(
   onProgress?: () => void,
   isCancelled?: () => boolean
 ): Promise<Array<{ blobSha: string; rawUrl: string; sha256Hash?: string }>> {
-  // Step 1: Create blobs (3 concurrent max to respect rate limits)
+  // Step 1: Create blobs (strictly 1-by-1 sequentially to prevent network drops and timeouts)
   const blobResults: Array<{ blobSha: string; rawUrl: string; sha256Hash?: string }> = [];
-  const CONCURRENCY = 3;
 
-  for (let i = 0; i < chunks.length; i += CONCURRENCY) {
+  for (let i = 0; i < chunks.length; i++) {
     if (isCancelled && isCancelled()) {
       throw new Error('STATUS_CANCELLED');
     }
-    const batch = chunks.slice(i, i + CONCURRENCY);
-    const results = await Promise.all(
-      batch.map(async (chunk) => {
-        const content = chunk.read ? await chunk.read() : { base64Content: chunk.base64Content!, sha256: undefined };
-        const blob = await createBlob(owner, repo, content.base64Content);
-        const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${repoPath}${chunk.fileName}`;
-        if (onProgress) onProgress();
-        return { blobSha: blob.sha, rawUrl, sha256Hash: content.sha256 };
-      })
-    );
-    blobResults.push(...results);
+    const chunk = chunks[i];
+    
+    console.log(`\n[GitHub API] ⏳ Reading chunk ${i + 1}/${chunks.length} from disk to memory...`);
+    const content = chunk.read ? await chunk.read() : { base64Content: chunk.base64Content!, sha256: undefined };
+    
+    console.log(`[GitHub API] 🚀 Uploading ${(content.base64Content.length / 1024 / 1024).toFixed(2)} MB of Base64 to GitHub as Git Blob...`);
+    const blob = await createBlob(owner, repo, content.base64Content);
+    console.log(`[GitHub API] ✅ Blob ${i + 1} finalized: ${blob.sha}`);
+    
+    const rawUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${repoPath}${chunk.fileName}`;
+    
+    if (onProgress) onProgress();
+    blobResults.push({ blobSha: blob.sha, rawUrl, sha256Hash: content.sha256 });
   }
 
   // Step 2: Get current branch state
+  console.log(`[GitHub API] 🔍 Fetching branch HEAD state...`);
   const currentCommitSha = await getBranchRef(owner, repo, branch);
   const baseTreeSha = await getCommitTree(owner, repo, currentCommitSha);
 
   // Step 3: Create tree with all chunk files
+  console.log(`[GitHub API] 🌳 Creating new Git Tree...`);
   const treeItems: GitTreeItem[] = chunks.map((chunk, idx) => ({
     path: `${repoPath}${chunk.fileName}`,
     mode: '100644' as const,
@@ -186,11 +189,14 @@ export async function atomicUpload(
   const newTreeSha = await createTree(owner, repo, baseTreeSha, treeItems);
 
   // Step 4: Create commit
+  console.log(`[GitHub API] 📝 Creating Git Commit...`);
   const newCommitSha = await createCommit(owner, repo, commitMessage, newTreeSha, currentCommitSha);
 
   // Step 5: Update branch reference
+  console.log(`[GitHub API] 🎯 Updating Branch Ref to new commit...`);
   await updateBranchRef(owner, repo, branch, newCommitSha);
 
+  console.log(`[GitHub API] 🎉 Multi-chunk Upload Fully Committed!`);
   return blobResults;
 }
 

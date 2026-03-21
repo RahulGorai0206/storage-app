@@ -31,16 +31,29 @@ Engineered with Shadcn UI (v4 / Base UI) and Tailwind CSS, the application featu
 * Node.js (v18 or higher)
 * A GitHub Account
 
-### 1. Create a GitHub OAuth App
-Because you are accessing files via GitHub's API, the application needs permission to interact with your repository.
-1. Go to your GitHub Settings -> Developer settings -> **OAuth Apps** -> **New OAuth App**.
-2. Set the Application Name (e.g., "Personal Drive").
-3. Set the Homepage URL to `http://localhost`.
-4. Set the Authorization Callback URL to `http://localhost`.
-5. Keep your brand new **Client ID** handy. Enable **Device Flow** if prompted so that the app can securely log you in without requiring browser callbacks!
+### 1. Create a GitHub App
+Because you are accessing repository files via the low-level Git Database API, the application requires a secure, fine-grained **GitHub App** registration:
+1. Go to your GitHub Settings -> Developer settings -> **GitHub Apps** -> **New GitHub App**.
+2. **Basic Settings**: 
+   - **GitHub App Name**: Anything unique (e.g., `Infinite-Drive-YourName`).
+   - **Homepage URL**: `http://localhost`.
+3. **Permissions** (Expand **Repository permissions**):
+   - **Contents**: Select **Read & write** (This is mandatory for uploads).
+   - **Metadata**: This will be automatically set to **Read-only**.
+4. **User permissions**: No changes needed.
+5. **Install App**: 
+   - Ensure "Any account" or "Only on this account" is checked, then click **Create GitHub App**.
+6. **Enable Device Flow** (Crucial!):
+   - On the left sidebar, click **Identification and Authorization**.
+   - Check the box for **"Enable Device Flow"**.
+7. **Install for Storage**:
+   - Go to **Install App** in the left sidebar.
+   - Click **Install** next to your profile.
+   - Select **Only select repositories** and pick your "Storage Repository" (created in Step 2).
+8. **Client ID**: Copy your **Client ID** from the "General" tab and keep it handy.
 
 ### 2. Create a Storage Repository
-Create an empty, private repository on your GitHub account where your files will actually live.
+Create an empty, **private** repository on your GitHub account where your physical file chunks will be stored.
 For example: `https://github.com/YourUsername/MyCloudDrive`
 
 ### 3. Launch the Application
@@ -81,6 +94,12 @@ graph TD
     Electron -->|Blobs -> Trees -> Commits| GitHub
     end
 ```
+
+### 🗄 Where are my files and database saved locally?
+The application gracefully saves all local configuration variables and the all-important **SQLite Database** (`github-drive.db`) completely outside of the project folder using Electron's secure `userData` system API. You can find your database here:
+* **Windows:** `C:\Users\<YourUsername>\AppData\Roaming\github-drive\github-drive.db`
+* **macOS:** `~/Library/Application Support/github-drive/github-drive.db`
+* **Linux:** `~/.config/github-drive/github-drive.db`
 
 ## 🐛 Troubleshooting
 
