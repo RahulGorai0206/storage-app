@@ -40,7 +40,10 @@ function DriveApp() {
 
         <DropZone>
           <ScrollArea className="flex-1">
-            <FileGrid onRename={(node) => setRenameNode(node)} />
+            <FileGrid 
+              onRename={(node) => setRenameNode(node)} 
+              onOpenNewFolder={() => setNewFolderOpen(true)}
+            />
           </ScrollArea>
         </DropZone>
       </div>

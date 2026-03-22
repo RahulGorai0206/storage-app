@@ -19,6 +19,8 @@ import {
   Trash2,
   Pencil,
   Play,
+  FolderPlus,
+  Upload,
 } from 'lucide-react';
 import {
   ContextMenu,
@@ -163,10 +165,11 @@ function DropdownActions({ node, onRename }: FileItemMenuProps) {
 
 interface FileGridProps {
   onRename: (node: VirtualNode) => void;
+  onOpenNewFolder: () => void;
 }
 
-export function FileGrid({ onRename }: FileGridProps) {
-  const { children, navigateTo, viewMode, isLoading, openMediaPlayer, openTextViewer, authStatus } = useDrive();
+export function FileGrid({ onRename, onOpenNewFolder }: FileGridProps) {
+  const { children, navigateTo, viewMode, isLoading, openMediaPlayer, openTextViewer, authStatus, openFileDialog } = useDrive();
 
   const handleDoubleClick = useCallback((node: VirtualNode) => {
     if (node.entity_type === 'DIRECTORY') {
@@ -217,119 +220,141 @@ export function FileGrid({ onRename }: FileGridProps) {
         </div>
       </div>
     );
-  }
-
-  // ===== Grid View =====
+  }  // ===== Grid View =====
   if (viewMode === 'grid') {
     return (
-      <div className="p-6">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-          {children.map((node) => (
-            <ContextMenu key={node.node_id}>
-              <ContextMenuTrigger className="block">
-                <div
-                  className="file-card group relative flex flex-col items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-4 cursor-pointer hover:bg-accent/50"
-                  onDoubleClick={() => handleDoubleClick(node)}
-                >
-                  {/* Icon */}
-                  <div className="relative">
-                    {getFileIcon(node)}
-                    {isMediaFile(node) && (
-                      <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full gradient-glow">
-                        <Play className="h-2.5 w-2.5 fill-white text-white" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Name */}
-                  <span className="text-xs text-center font-medium truncate w-full">
-                    {node.logical_name}
-                  </span>
-
-                  {/* Size */}
-                  {node.entity_type === 'FILE' && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {formatSize(node.total_size)}
-                    </span>
-                  )}
-
-                  {/* More button */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-accent cursor-pointer"
-                      onClick={(e) => e.stopPropagation()}
+      <ContextMenu>
+        <ContextMenuTrigger className="min-h-[calc(100vh-12rem)] block">
+          <div className="p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {children.map((node) => (
+                <ContextMenu key={node.node_id}>
+                  <ContextMenuTrigger className="block">
+                    <div
+                      className="file-card group relative flex flex-col items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-4 cursor-pointer hover:bg-accent/50"
+                      onDoubleClick={() => handleDoubleClick(node)}
                     >
-                      <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-44">
-                      <DropdownActions node={node} onRename={onRename} />
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </ContextMenuTrigger>
-              <ContextMenuContent className="w-48">
-                <FileItemActions node={node} onRename={onRename} />
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ===== List View =====
-  return (
-    <div className="p-4">
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent border-border/50">
-            <TableHead className="w-[50%]">Name</TableHead>
-            <TableHead>Size</TableHead>
-            <TableHead>Modified</TableHead>
-            <TableHead className="w-10"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {children.map((node) => (
-            <ContextMenu key={node.node_id}>
-              <ContextMenuTrigger
-                render={
-                  <TableRow
-                    className="cursor-pointer hover:bg-accent/30 border-border/30"
-                    onDoubleClick={() => handleDoubleClick(node)}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-3">
-                        {getSmallIcon(node)}
-                        <span className="truncate">{node.logical_name}</span>
+                      {/* Icon */}
+                      <div className="relative">
+                        {getFileIcon(node)}
+                        {isMediaFile(node) && (
+                          <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full gradient-glow">
+                            <Play className="h-2.5 w-2.5 fill-white text-white" />
+                          </div>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {node.entity_type === 'FILE' ? formatSize(node.total_size) : '—'}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(node.updated_at)}
-                    </TableCell>
-                    <TableCell>
+
+                      {/* Name */}
+                      <span className="text-xs text-center font-medium truncate w-full">
+                        {node.logical_name}
+                      </span>
+
+                      {/* Size */}
+                      {node.entity_type === 'FILE' && (
+                        <span className="text-[10px] text-muted-foreground">
+                          {formatSize(node.total_size)}
+                        </span>
+                      )}
+
+                      {/* More button */}
                       <DropdownMenu>
-                        <DropdownMenuTrigger className="p-1 rounded-md hover:bg-accent transition-colors cursor-pointer block">
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                        <DropdownMenuTrigger
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md hover:bg-accent cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-3.5 w-3.5 text-muted-foreground" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                           <DropdownActions node={node} onRename={onRename} />
                         </DropdownMenuContent>
                       </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                }
-              />
-              <ContextMenuContent className="w-48">
-                <FileItemActions node={node} onRename={onRename} />
-              </ContextMenuContent>
-            </ContextMenu>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+                    </div>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-48">
+                    <FileItemActions node={node} onRename={onRename} />
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))}
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-56">
+          <ContextMenuItem onClick={onOpenNewFolder} className="gap-3 cursor-pointer">
+            <FolderPlus className="h-4 w-4" /> New Folder
+          </ContextMenuItem>
+          <ContextMenuItem onClick={openFileDialog} className="gap-3 cursor-pointer">
+            <Upload className="h-4 w-4" /> Upload File
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
+  }
+
+  // ===== List View =====
+  return (
+    <ContextMenu>
+      <ContextMenuTrigger className="min-h-[calc(100vh-12rem)] block">
+        <div className="p-4">
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent border-border/50">
+                <TableHead className="w-[50%]">Name</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Modified</TableHead>
+                <TableHead className="w-10"></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {children.map((node) => (
+                <ContextMenu key={node.node_id}>
+                  <ContextMenuTrigger
+                    render={
+                      <TableRow
+                        className="cursor-pointer hover:bg-accent/30 border-border/30"
+                        onDoubleClick={() => handleDoubleClick(node)}
+                      >
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-3">
+                            {getSmallIcon(node)}
+                            <span className="truncate">{node.logical_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {node.entity_type === 'FILE' ? formatSize(node.total_size) : '—'}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {formatDate(node.updated_at)}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger className="p-1 rounded-md hover:bg-accent transition-colors cursor-pointer block">
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownActions node={node} onRename={onRename} />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    }
+                  />
+                  <ContextMenuContent className="w-48">
+                    <FileItemActions node={node} onRename={onRename} />
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuItem onClick={onOpenNewFolder} className="gap-3 cursor-pointer">
+          <FolderPlus className="h-4 w-4" /> New Folder
+        </ContextMenuItem>
+        <ContextMenuItem onClick={openFileDialog} className="gap-3 cursor-pointer">
+          <Upload className="h-4 w-4" /> Upload File
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }
