@@ -49,6 +49,12 @@ interface DriveContextValue {
   textStreamUrl: string | null;
   openTextViewer: (node: VirtualNode) => void;
   closeTextViewer: () => void;
+  
+  // Search
+  searchFiles: (query: string) => Promise<VirtualNode[]>;
+  searchResults: VirtualNode[];
+  isSearching: boolean;
+  clearSearch: () => void;
 }
 
 const DriveContext = createContext<DriveContextValue | null>(null);
@@ -77,6 +83,8 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
   const [mediaStreamUrl, setMediaStreamUrl] = useState<string | null>(null);
   const [textNode, setTextNode] = useState<VirtualNode | null>(null);
   const [textStreamUrl, setTextStreamUrl] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<VirtualNode[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const cleanupRef = useRef<(() => void) | null>(null);
 
   // Load initial state
@@ -256,6 +264,28 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
     setSettings(newSettings);
   }, []);
 
+  const searchFiles = useCallback(async (query: string) => {
+    if (!isElectron() || !query.trim()) {
+      setSearchResults([]);
+      return [];
+    }
+    setIsSearching(true);
+    try {
+      const results = await window.electronAPI.searchNodes(query);
+      setSearchResults(results);
+      return results;
+    } catch (err) {
+      console.error('Search failed:', err);
+      return [];
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
+
+  const clearSearch = useCallback(() => {
+    setSearchResults([]);
+  }, []);
+
   const value: DriveContextValue = {
     currentDirId,
     children: childNodes,
@@ -285,6 +315,10 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
     mediaStreamUrl,
     textNode,
     textStreamUrl,
+    searchFiles,
+    searchResults,
+    isSearching,
+    clearSearch,
   };
 
   return <DriveContext.Provider value={value}>{childrenProp}</DriveContext.Provider>;

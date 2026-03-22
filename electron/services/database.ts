@@ -216,3 +216,21 @@ export function upsertNodeWithChunks(
   });
   return transaction();
 }
+export function searchNodes(query: string): Array<VirtualNode & { parent_path: string }> {
+  const searchTerm = `%${query}%`;
+  return db.prepare(`
+    WITH RECURSIVE
+      path_builder(id, name, path) AS (
+        SELECT node_id, logical_name, 'My Drive' FROM Virtual_Nodes WHERE parent_id IS NULL
+        UNION ALL
+        SELECT vn.node_id, vn.logical_name, pb.path || ' / ' || pb.name
+        FROM Virtual_Nodes vn
+        JOIN path_builder pb ON vn.parent_id = pb.id
+      )
+    SELECT vn.*, pb.path as parent_path
+    FROM Virtual_Nodes vn
+    JOIN path_builder pb ON vn.node_id = pb.id
+    WHERE vn.logical_name LIKE ?
+    LIMIT 50
+  `).all(searchTerm) as Array<VirtualNode & { parent_path: string }>;
+}

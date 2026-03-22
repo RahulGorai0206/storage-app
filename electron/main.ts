@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import { initDatabase, getChildren, getNode, insertNode, deleteNode, getPath, updateNode, getChunks, getSetting, setSetting } from './services/database';
+import { initDatabase, getChildren, getNode, insertNode, deleteNode, getPath, updateNode, getChunks, getSetting, setSetting, searchNodes } from './services/database';
 import { initAuth, startDeviceFlow, pollForToken, getAuthStatus, getToken, logout } from './services/auth';
 import { needsChunking, calculateChunks, readChunkAsBase64, computeSHA256, getMimeType, CHUNK_SIZE, computeSHA256FromBuffer, readChunk } from './services/chunker';
 import { atomicUpload, deleteFromRepo, checkRepo } from './services/github';
@@ -309,6 +309,10 @@ function registerIpcHandlers(): void {
 
   ipcMain.handle('drive:get-stream-url', async (_event, nodeId: string) => {
     return getStreamUrl(nodeId);
+  });
+
+  ipcMain.handle('drive:search', async (_event, query: string) => {
+    return searchNodes(query);
   });
 
   // --- Settings ---

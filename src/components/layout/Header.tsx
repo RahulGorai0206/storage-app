@@ -4,6 +4,7 @@ import React from 'react';
 import { useDrive } from '@/contexts/DriveContext';
 import { FolderPlus, Upload, LayoutGrid, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SearchBar } from './SearchBar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   Breadcrumb,
@@ -27,7 +28,7 @@ export function Header({ onOpenNewFolder }: HeaderProps) {
   const { breadcrumb, navigateTo, viewMode, setViewMode, openFileDialog } = useDrive();
 
   return (
-    <div className="flex items-center justify-between gap-4 px-6 h-16 border-b border-border bg-background/50 backdrop-blur-sm">
+    <div className="flex items-center justify-between gap-4 px-6 h-16 border-b border-border bg-background/50 backdrop-blur-sm z-50 sticky top-0">
       {/* Left: Breadcrumb */}
       <div className="flex items-center gap-4 min-w-0 flex-1">
         <Breadcrumb>
@@ -56,6 +57,9 @@ export function Header({ onOpenNewFolder }: HeaderProps) {
           </BreadcrumbList>
         </Breadcrumb>
       </div>
+
+      {/* Center: Search */}
+      <SearchBar />
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">

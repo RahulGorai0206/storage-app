@@ -9,6 +9,7 @@ export interface VirtualNode {
   mime_type: string | null;
   created_at: string;
   updated_at: string;
+  parent_path?: string; // Optional field for search results
 }
 
 export interface PhysicalChunk {
@@ -99,6 +100,7 @@ export interface ElectronAPI {
   downloadFile: (nodeId: string) => Promise<string>; // returns saved path
   getPath: (nodeId: string) => Promise<VirtualNode[]>;
   renameNode: (nodeId: string, newName: string) => Promise<VirtualNode>;
+  searchNodes: (query: string) => Promise<Array<VirtualNode & { full_path: string }>>;
   // Streaming
   getStreamUrl: (nodeId: string) => Promise<string>;
   // Settings

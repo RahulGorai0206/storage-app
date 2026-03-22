@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   downloadFile: (nodeId: string) => ipcRenderer.invoke('drive:download-file', nodeId),
   getPath: (nodeId: string) => ipcRenderer.invoke('drive:get-path', nodeId),
   renameNode: (nodeId: string, newName: string) => ipcRenderer.invoke('drive:rename-node', nodeId, newName),
+  searchNodes: (query: string) => ipcRenderer.invoke('drive:search', query),
 
   // Streaming
   getStreamUrl: (nodeId: string) => ipcRenderer.invoke('drive:get-stream-url', nodeId),
