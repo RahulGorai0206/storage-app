@@ -56,26 +56,48 @@ Because you are accessing repository files via the low-level Git Database API, t
 Create an empty, **private** repository on your GitHub account where your physical file chunks will be stored.
 For example: `https://github.com/YourUsername/MyCloudDrive`
 
-### 3. Launch the Application
-Clone this project, then run the standard installation and boot commands:
+### 3. Launch & Build (Windows)
 
+#### **Option A: Development Mode**
+Run the app in live "dev" mode while making code changes.
 ```bash
-# 1. Install dependencies (This also executes native Node module compilation for Electron SQLite3!)
 npm install
-
-# 2. Boot the Next.js React frontend AND the Electron backend concurrently 
 npm run dev
 ```
 
-### 4. Connect GitHub
-Once the beautiful UI loads up:
-1. Click **Settings** (the gear icon) in the bottom-left corner of the Sidebar.
-2. Enter your GitHub **Client ID**.
-3. Enter your **Repository Owner** (your username) and **Repository Name** (the repo you just made).
-4. Enter the internal branch you want files stored on (usually `main`). 
-5. Click **Sign In**. The app will provide a secure 8-digit device code. Click the pop-up link to securely authorize the app on the GitHub Website.
+#### **Option B: NSIS Installer (Recommended)**
+Generate a one-click Setup installer. Users install once and the app launches instantly (~2s) from the Start Menu.
+```bash
+# Requires an Administrator terminal
+npm run build:exe
+```
+Output: `release/GitHub Drive Setup 0.1.0.exe`
 
-You are now fully connected to the Infinite Drive!
+> ⚠️ You **must** run this from a terminal opened with **"Run as Administrator"**. The NSIS packager requires elevated privileges.
+
+#### **Option C: Portable Build (No Install Required)**
+If you want a folder you can carry on a USB or share as a ZIP:
+1. Change `"target": "nsis"` to `"target": "portable"` in `package.json` under the `"build"` → `"win"` section.
+2. Run `npm run build:exe`.
+3. Output: `release/GitHub Drive 0.1.0.exe` (single portable file, ~30s startup).
+
+Alternatively, use `electron-builder --dir` instead to get an unpacked folder at `release/win-unpacked/` with instant startup — just ZIP and share!
+
+---
+
+### 4. Setup in the UI
+Once the app window appears:
+1. Click the **Settings** (gear) icon in the bottom-left sidebar.
+2. Enter your **Client ID**, **Repository Owner**, and **Repository Name**.
+3. Click **Sign In**.
+4. Authorize via the 8-digit code link provided.
+
+---
+
+## 🎨 Changing the Icon
+To update the app icon:
+1. Replace `public/icon.ico` with your own 256×256+ ICO file.
+2. Run `npm run build:exe` to re-package.
 
 ---
 

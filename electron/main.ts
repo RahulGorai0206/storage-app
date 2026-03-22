@@ -14,13 +14,15 @@ const canceledUploads = new Set<string>();
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): void {
+  const isDev = !app.isPackaged;
+  
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 900,
     minHeight: 600,
     title: 'GitHub Drive',
-    icon: path.join(__dirname, '../public/icon.png'),
+    icon: path.join(app.getAppPath(), 'public/icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -31,14 +33,17 @@ function createWindow(): void {
     frame: process.platform === 'darwin' ? false : true,
     backgroundColor: '#09090b',
   });
+  
+  if (!isDev) {
+    mainWindow.setMenu(null);
+  }
 
   // In dev, load from Next.js dev server
-  const isDev = !app.isPackaged;
   if (isDev) {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../out/index.html'));
+    mainWindow.loadFile(path.join(app.getAppPath(), 'out/index.html'));
   }
 
   mainWindow.on('closed', () => {

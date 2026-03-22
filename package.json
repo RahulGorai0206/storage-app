@@ -10,7 +10,7 @@
     "build:next": "next build",
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "npm run build:next && npm run build:electron",
-    "build:exe": "npm run build && electron-builder --dir",
+    "build:exe": "npm run build && electron-builder --win",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "electron-builder install-app-deps"
@@ -24,10 +24,19 @@
     "files": [
       "out/**/*",
       "electron/dist/**/*",
+      "public/**/*",
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "installerIcon": "public/icon.ico",
+      "uninstallerIcon": "public/icon.ico"
     }
   },
   "dependencies": {
@@ -59,6 +68,7 @@
     "electron-builder": "^26.8.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "png-to-ico": "^3.0.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wait-on": "^9.0.4"
