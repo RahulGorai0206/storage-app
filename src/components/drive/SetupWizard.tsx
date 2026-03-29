@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Folder, Database, ShieldCheck, ArrowRight, HardDrive } from 'lucide-react';
+import { Folder, Database, ShieldCheck, ArrowRight, HardDrive, Info, BookOpen } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 
 interface SetupWizardProps {
@@ -52,15 +52,19 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
       <Card className="w-full max-w-2xl border-border/50 bg-card/50 shadow-2xl">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            {step === 1 ? <ShieldCheck className="h-6 w-6 text-primary" /> : <Database className="h-6 w-6 text-primary" />}
+            {step === 1 && <ShieldCheck className="h-6 w-6 text-primary" />}
+            {step === 2 && <BookOpen className="h-6 w-6 text-primary" />}
+            {step === 3 && <Database className="h-6 w-6 text-primary" />}
           </div>
           <CardTitle className="text-2xl font-bold">
-            {step === 1 ? 'Terms and Conditions' : 'Database Storage'}
+            {step === 1 && 'Terms and Conditions'}
+            {step === 2 && 'Project Overview'}
+            {step === 3 && 'Database Storage'}
           </CardTitle>
           <CardDescription>
-            {step === 1 
-              ? 'Please review and accept our terms to continue.' 
-              : 'Choose where you want to store your local drive database.'}
+            {step === 1 && 'Please review and accept our terms to continue.'}
+            {step === 2 && 'How GitHub Drive works and its key features.'}
+            {step === 3 && 'Choose where you want to store your local drive database.'}
           </CardDescription>
         </CardHeader>
 
@@ -103,6 +107,39 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 </label>
               </div>
             </div>
+          ) : step === 2 ? (
+            <div className="space-y-4">
+              <div className="h-64 overflow-y-auto rounded-md border border-border/50 bg-background/50 p-4 text-sm text-muted-foreground space-y-4">
+                <section>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2 mb-1">
+                    <Info className="h-4 w-4 text-primary" />
+                    What is GitHub Drive?
+                  </h3>
+                  <p>
+                    GitHub Drive turns any GitHub repository into a virtual cloud storage system. 
+                    It bypasses file size limits by automatically splitting large files into smaller chunks.
+                  </p>
+                </section>
+                
+                <section>
+                  <h3 className="font-semibold text-foreground mb-1">Key Features</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li><strong>Unlimited Storage</strong>: Limited only by your GitHub account/repo capacity.</li>
+                    <li><strong>Smart Chunking</strong>: Large files are split into 20MB blobs for seamless uploads.</li>
+                    <li><strong>Media Streaming</strong>: Watch videos or listen to music directly from your GitHub repo.</li>
+                    <li><strong>Secure & Private</strong>: Your data stays in your own repositories.</li>
+                  </ul>
+                </section>
+
+                <section>
+                  <h3 className="font-semibold text-foreground mb-1">Getting Started</h3>
+                  <p>
+                    After setup, you'll need to configure your <strong>GitHub App Client ID</strong>, 
+                    <strong>Repository Name</strong>, and <strong>Owner</strong> in the settings.
+                  </p>
+                </section>
+              </div>
+            </div>
           ) : (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
@@ -142,18 +179,19 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           <div className="flex gap-1">
             <div className={`h-1.5 w-8 rounded-full ${step === 1 ? 'bg-primary' : 'bg-muted'}`} />
             <div className={`h-1.5 w-8 rounded-full ${step === 2 ? 'bg-primary' : 'bg-muted'}`} />
+            <div className={`h-1.5 w-8 rounded-full ${step === 3 ? 'bg-primary' : 'bg-muted'}`} />
           </div>
           
           <div className="flex gap-3">
-            {step === 2 && (
-              <Button variant="ghost" onClick={() => setStep(1)} disabled={isLoading}>
+            {step > 1 && (
+              <Button variant="ghost" onClick={() => setStep(step - 1)} disabled={isLoading}>
                 Back
               </Button>
             )}
-            {step === 1 ? (
+            {step < 3 ? (
               <Button 
-                onClick={() => setStep(2)} 
-                disabled={!termsAccepted}
+                onClick={() => setStep(step + 1)} 
+                disabled={step === 1 && !termsAccepted}
                 className="gradient-glow border-0 text-white gap-2"
               >
                 Continue

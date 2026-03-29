@@ -24,14 +24,21 @@
     "directories": {
       "output": "release"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "RahulGorai0206",
+      "repo": "github-drive"
+    },
     "files": [
       "out/**/*",
       "electron/dist/**/*",
       "public/**/*",
       "package.json",
       "!release/**/*",
-      "!.git/**/*",
-      "!node_modules/**/*"
+      "!.git/**/*"
+    ],
+    "asarUnpack": [
+      "**/*.node"
     ],
     "win": {
       "target": "nsis",

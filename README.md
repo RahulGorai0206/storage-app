@@ -65,8 +65,12 @@ npm install
 npm run dev
 ```
 
-#### **Option B: NSIS Installer (Recommended)**
-Generate a one-click Setup installer. Users install once and the app launches instantly (~2s) from the Start Menu.
+#### **Option B: Professional Installer (Recommended)**
+Generate a professional, assisted Setup wizard.
+- **License Agreement**: Users must accept the terms before installation.
+- **Custom Path**: Users can choose the installation folder.
+- **Start Menu**: The app installs to the system and launches instantly from the Start Menu.
+
 ```bash
 # Requires an Administrator terminal
 npm run build:exe
@@ -85,12 +89,18 @@ Alternatively, use `electron-builder --dir` instead to get an unpacked folder at
 
 ---
 
-### 4. Setup in the UI
-Once the app window appears:
+### 4. First-Launch Setup Wizard
+Once the app window appears for the first time:
+1. **Accept Terms**: Review and agree to the usage terms.
+2. **Project Overview**: Learn about the core features and architecture.
+3. **Database Selection**: Choose a one-time storage location for your `github-drive.db`.
+4. **Finalize**: The app will relaunch to initialize your chosen storage path.
+
+### 5. Finalize Configuration
+After the wizard completes:
 1. Click the **Settings** (gear) icon in the bottom-left sidebar.
-2. Enter your **Client ID**, **Repository Owner**, and **Repository Name**.
-3. Click **Sign In**.
-4. Authorize via the 8-digit code link provided.
+2. Enter your **GitHub App Client ID**, **Repository Owner**, and **Name**.
+3. Click **Sign In** and authorize via the 8-digit code.
 
 ---
 
@@ -118,10 +128,12 @@ graph TD
 ```
 
 ### 🗄 Where are my files and database saved locally?
-The application gracefully saves all local configuration variables and the all-important **SQLite Database** (`github-drive.db`) completely outside of the project folder using Electron's secure `userData` system API. You can find your database here:
-* **Windows:** `C:\Users\<YourUsername>\AppData\Roaming\github-drive\github-drive.db`
-* **macOS:** `~/Library/Application Support/github-drive/github-drive.db`
-* **Linux:** `~/.config/github-drive/github-drive.db`
+The application allows you to choose your **SQLite Database** (`github-drive.db`) location during the first-launch setup. 
+- **Bootstrap Config**: A small `config.json` is stored in the default Electron `userData` folder to remember your custom DB path.
+- **Default Paths (if not customized)**:
+  - **Windows:** `C:\Users\<YourUsername>\AppData\Roaming\github-drive\`
+  - **macOS:** `~/Library/Application Support/github-drive/`
+  - **Linux:** `~/.config/github-drive/`
 
 ## 🐛 Troubleshooting
 

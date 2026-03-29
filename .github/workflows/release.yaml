@@ -36,7 +36,7 @@ jobs:
         # We use a shell script to only set signing env vars if they are available
         # This prevents electron-builder from failing on empty strings
         shell: bash
-        run: npm run build:dist
+        run: npm run build:dist -- --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Force disable auto discovery to avoid local certificate errors
@@ -50,20 +50,3 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-
-      - name: Upload Artifacts to Release
-        uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: |
-            release/*.exe
-            release/*.msi
-            release/*.zip
-            release/*.dmg
-            release/*.AppImage
-            release/*.deb
-          draft: false
-          prerelease: false
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
