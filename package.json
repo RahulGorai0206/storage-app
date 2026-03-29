@@ -11,6 +11,7 @@
     "build:electron": "tsc -p electron/tsconfig.json",
     "build": "npm run build:next && npm run build:electron",
     "build:exe": "npm run build && electron-builder --win",
+    "build:dist": "npm run build && electron-builder",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "electron-builder install-app-deps"
@@ -37,6 +38,20 @@
       "allowToChangeInstallationDirectory": false,
       "installerIcon": "public/icon.ico",
       "uninstallerIcon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "public/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/icon.png"
     }
   },
   "dependencies": {

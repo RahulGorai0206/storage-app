@@ -1,0 +1,62 @@
+name: Release Electron App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and Package
+        run: npm run build:dist
+        env:
+          # GitHub Token for electron-builder (important for some publish features)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Code Signing - Windows
+          CSC_LINK: ${{ matrix.os == 'windows-latest' && secrets.WIN_CSC_LINK || (matrix.os == 'macos-latest' && secrets.MAC_CSC_LINK || '') }}
+          CSC_KEY_PASSWORD: ${{ matrix.os == 'windows-latest' && secrets.WIN_CSC_PASSWORD || (matrix.os == 'macos-latest' && secrets.MAC_CSC_PASSWORD || '') }}
+          # Notarization - macOS
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Upload Artifacts to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            release/*.exe
+            release/*.msi
+            release/*.zip
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
+            release/*.blockmap
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
