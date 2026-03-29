@@ -78,7 +78,7 @@ export function DriveProvider({ children: childrenProp }: { children: React.Reac
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isLoading, setIsLoading] = useState(false);
   const [authStatus, setAuthStatus] = useState<AuthStatus>({ authenticated: false });
-  const [settings, setSettings] = useState<AppSettings>({ owner: '', repo: '', branch: 'main', clientId: '' });
+  const [settings, setSettings] = useState<AppSettings>({ owner: '', repo: '', branch: 'main', clientId: '', termsAccepted: false });
   const [uploadQueue, setUploadQueue] = useState<UploadTask[]>([]);
   const [mediaNode, setMediaNode] = useState<VirtualNode | null>(null);
   const [mediaStreamUrl, setMediaStreamUrl] = useState<string | null>(null);

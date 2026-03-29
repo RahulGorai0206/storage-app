@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Settings
   getSettings: () => ipcRenderer.invoke('settings:get'),
   saveSettings: (settings: Record<string, string>) => ipcRenderer.invoke('settings:save', settings),
+  getDbPath: () => ipcRenderer.invoke('settings:get-db-path'),
+  selectFolder: () => ipcRenderer.invoke('dialog:select-folder'),
+  relaunchApp: () => ipcRenderer.invoke('app:relaunch'),
 
   // File dialog
   openFileDialog: () => ipcRenderer.invoke('dialog:open-file'),

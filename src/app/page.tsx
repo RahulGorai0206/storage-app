@@ -16,13 +16,20 @@ import { TextViewer } from '@/components/drive/TextViewer';
 import { DropZone } from '@/components/drive/DropZone';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { SetupWizard } from '@/components/drive/SetupWizard';
+import { useDrive } from '@/contexts/DriveContext';
 
 function DriveApp() {
+  const { settings } = useDrive();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [newFolderOpen, setNewFolderOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
   const [renameNode, setRenameNode] = useState<VirtualNode | null>(null);
+
+  if (!settings.termsAccepted) {
+    return <SetupWizard onComplete={() => {}} />;
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">

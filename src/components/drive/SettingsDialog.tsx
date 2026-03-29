@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Settings, Github } from 'lucide-react';
+import { Settings, Github, HardDrive } from 'lucide-react';
 
 interface SettingsDialogProps {
   open: boolean;
@@ -25,6 +25,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [repo, setRepo] = useState('');
   const [branch, setBranch] = useState('main');
   const [clientId, setClientId] = useState('');
+  const [dbPath, setDbPath] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -32,6 +33,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
     setRepo(settings.repo);
     setBranch(settings.branch || 'main');
     setClientId(settings.clientId);
+    // Fetch DB path
+    if (window.electronAPI) {
+      window.electronAPI.getDbPath().then(setDbPath);
+    }
   }, [settings]);
 
   const handleSave = async () => {
@@ -105,6 +110,21 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
               placeholder="main"
               className="bg-background/50"
             />
+          </div>
+
+          <div className="pt-2 border-t border-border/50 space-y-2">
+            <label className="text-sm font-medium flex items-center gap-2">
+              <HardDrive className="h-3.5 w-3.5 text-primary" />
+              Data Storage
+            </label>
+            <Input
+              value={dbPath}
+              readOnly
+              className="bg-muted font-mono text-[10px] h-8 opacity-70"
+            />
+            <p className="text-[10px] text-muted-foreground italic">
+              Database location is fixed after initial setup.
+            </p>
           </div>
         </div>
 

@@ -1,0 +1,18 @@
+GitHub Drive Terms and Conditions
+
+1. ACCEPTANCE OF TERMS
+By installing and using GitHub Drive ("the App"), you agree to be bound by these Terms and Conditions. If you do not agree to these terms, do not install or use the App.
+
+2. LICENSE
+The App is provided for personal or enterprise use to manage files on GitHub. You must comply with GitHub's own Terms of Service.
+
+3. DATA PRIVACY
+GitHub Drive stores a local database of your file structures. You are responsible for choosing a secure location for this database. GitHub Drive does not collect your personal data beyond what is required to interact with the GitHub API.
+
+4. LIMITATION OF LIABILITY
+The App is provided "AS IS" without warranty of any kind. The developers are not responsible for any data loss occurring through the use of this App or GitHub.
+
+5. INTELLECTUAL PROPERTY
+GitHub remains the property of GitHub, Inc. This App is an independent tool and is not affiliated with GitHub, Inc.
+
+By clicking "I Agree", you acknowledge that you have read and understood these terms.

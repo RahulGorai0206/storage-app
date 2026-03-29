@@ -107,6 +107,9 @@ export interface ElectronAPI {
   // Settings
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: AppSettings) => Promise<void>;
+  getDbPath: () => Promise<string>;
+  selectFolder: () => Promise<string | null>;
+  relaunchApp: (customDbPath?: string) => Promise<void>;
   // File dialog
   openFileDialog: () => Promise<string[]>;
   // Events
@@ -120,6 +123,7 @@ export interface AppSettings {
   repo: string;
   branch: string;
   clientId: string;
+  termsAccepted?: boolean;
 }
 
 declare global {

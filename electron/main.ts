@@ -12,6 +12,32 @@ import type { UploadTask, AppSettings } from './types';
 const canceledUploads = new Set<string>();
 
 let mainWindow: BrowserWindow | null = null;
+const CONFIG_FILE = 'config.json';
+
+function getAppConfigPath() {
+  return path.join(app.getPath('userData'), CONFIG_FILE);
+}
+
+function getBaseConfig(): { dbPath?: string } {
+  try {
+    const configPath = getAppConfigPath();
+    if (fs.existsSync(configPath)) {
+      return JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    }
+  } catch (err) {
+    console.error('Failed to read config:', err);
+  }
+  return {};
+}
+
+function saveBaseConfig(config: { dbPath: string }) {
+  try {
+    const configPath = getAppConfigPath();
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+  } catch (err) {
+    console.error('Failed to save config:', err);
+  }
+}
 
 function createWindow(): void {
   const isDev = !app.isPackaged;
@@ -355,6 +381,7 @@ function registerIpcHandlers(): void {
       repo: getSetting('repo') || '',
       branch: getSetting('branch') || 'main',
       clientId: getSetting('clientId') || '',
+      termsAccepted: getSetting('termsAccepted') === 'true',
     } as AppSettings;
   });
 
@@ -363,6 +390,31 @@ function registerIpcHandlers(): void {
     setSetting('repo', settings.repo);
     setSetting('branch', settings.branch || 'main');
     setSetting('clientId', settings.clientId);
+    if (settings.termsAccepted !== undefined) {
+      setSetting('termsAccepted', settings.termsAccepted ? 'true' : 'false');
+    }
+  });
+
+  ipcMain.handle('settings:get-db-path', async () => {
+    const config = getBaseConfig();
+    return config.dbPath || path.join(app.getPath('userData'), 'github-drive.db');
+  });
+
+  // --- Utilities ---
+  ipcMain.handle('dialog:select-folder', async () => {
+    const result = await dialog.showOpenDialog(mainWindow!, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Select Database Storage Folder',
+    });
+    return result.canceled ? null : result.filePaths[0];
+  });
+
+  ipcMain.handle('app:relaunch', async (_event, customDbPath?: string) => {
+    if (customDbPath) {
+      saveBaseConfig({ dbPath: customDbPath });
+    }
+    app.relaunch();
+    app.exit();
   });
 
   // --- File Dialog ---
@@ -378,7 +430,9 @@ function registerIpcHandlers(): void {
 
 app.whenReady().then(async () => {
   // Initialize services
-  initDatabase(app.getPath('userData'));
+  const config = getBaseConfig();
+  const dbPath = config.dbPath || app.getPath('userData');
+  initDatabase(dbPath);
   initAuth(app.getPath('userData'));
 
   // Start streaming server

@@ -62,7 +62,6 @@ jobs:
             release/*.dmg
             release/*.AppImage
             release/*.deb
-            release/*.blockmap
           draft: false
           prerelease: false
           generate_release_notes: true
